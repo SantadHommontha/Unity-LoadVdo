@@ -58,7 +58,7 @@ public class LoadJson : MonoBehaviour
             string fileName = Path.GetFileName(filePaths[0]);
             videoPlayer.source = VideoSource.Url;
             videoPlayer.url = filePaths[0];
-            // videoPlayer.Play();
+          
             videoPlayer.Prepare();
 
             videoPlayer.prepareCompleted += OnPrepareCompleted;
