@@ -2,6 +2,14 @@ using UnityEngine;
 using System.IO;
 using System.Collections.Generic;
 using System;
+
+
+[System.Serializable]
+public class VideoSetting
+{
+    public bool playLoop = true;
+    public string RootVideoFolder = "Videos";
+}
 public class VideoManamger : MonoBehaviour
 {
     private static VideoManamger _instance;
@@ -41,7 +49,8 @@ public class VideoManamger : MonoBehaviour
     public Action OnStopAll;
     public Action OnGetVideoPath;
 
-
+    private VideoSetting videoSetting;
+    private string directory = Path.GetDirectoryName(Application.dataPath);
 
     [Header("Test")]
     public string[] pathTest1;
@@ -55,7 +64,7 @@ public class VideoManamger : MonoBehaviour
     }
     void Start()
     {
-
+        LoadSetting();
     }
 
 
@@ -77,20 +86,64 @@ public class VideoManamger : MonoBehaviour
         {
             OnGetVideoPath?.Invoke();
         }
+        if (Input.GetKey(KeyCode.L))
+        {
+            LoadSetting();
+        }
     }
-    string directory = Path.GetDirectoryName(Application.dataPath);
+
+
+    private void LoadSetting()
+    {
+        var path = Path.Combine(GetVideoSetting(), "VideoSetting.json");
+        VideoSetting _videoSetting = new VideoSetting();
+        if (File.Exists(path))
+        {
+            var content = File.ReadAllText(path);
+            _videoSetting = JsonUtility.FromJson<VideoSetting>(content);
+        }
+        else
+        {
+            _videoSetting = new VideoSetting();
+            var jsonData = JsonUtility.ToJson(_videoSetting);
+
+            File.WriteAllText(path, jsonData);
+        }
+
+        Setting(_videoSetting);
+
+    }
+
+    private void Setting(VideoSetting _videoSetting)
+    {
+        videoSetting = _videoSetting;
+
+        playLoop = _videoSetting.playLoop;
+    }
+
 #if UNITY_EDITOR
     private string GetVideoFloder(string _floderName)
     {
 
         return Path.Combine(directory, "Assets", _floderName);
     }
+    private string GetVideoSetting()
+    {
+        return Path.Combine(directory, "Assets");
+    }
+
+
+
 
 #else
     private string GetVideoFloder(string _floderName)
     {
         return Path.Combine(directory, _floderName);
     }
+
+    private string GetVideoSetting() {
+return directory;
+    }   
 #endif
     private void ShowTest()
     {
@@ -100,7 +153,7 @@ public class VideoManamger : MonoBehaviour
         pathTest4 = videoClipsPaths[3];
     }
 
-    public string[] GetVideoClipPath(int _number)
+    public string[] GetVideoClipPath(int _number, int _l = 1)
     {
         if (_number >= videoClipsPaths.Length)
         {
@@ -108,7 +161,18 @@ public class VideoManamger : MonoBehaviour
         }
         else
         {
-            if (videoClipsPaths[_number].Length == 0 || videoClipsPaths[_number] == null) return null;
+            if (videoClipsPaths[_number].Length == 0 || videoClipsPaths[_number] == null)
+            {
+                if (_l == 1)
+                {
+                    LoadPath();
+                    var rt = GetVideoClipPath(_number, 0);
+                    return rt;
+                }
+
+                return null;
+
+            }
             else return videoClipsPaths[_number];
         }
     }
