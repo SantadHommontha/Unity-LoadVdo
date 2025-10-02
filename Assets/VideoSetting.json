@@ -1,4 +1,14 @@
 {
     "playLoop": true,
-    "RootVideoFolder": "Videos"
+    "RootVideoFolder": "Videos",
+    "videoFolderName": [
+        "vdo1",
+        "vdo2",
+        "vdo3",
+        "vdo4"
+    ],
+    "videoFormat": [
+        "mp4",
+        "mov"
+    ]
 }

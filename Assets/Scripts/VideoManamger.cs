@@ -9,54 +9,62 @@ public class VideoSetting
 {
     public bool playLoop = true;
     public string RootVideoFolder = "Videos";
+    public string[] videoFolderName = { "vdo1", "vdo2", "vdo3", "vdo4" };
+    public string[] videoFormat = { "mp4", "mov" };
 }
 public class VideoManamger : MonoBehaviour
 {
+    #region Static variable
     private static VideoManamger _instance;
     public static VideoManamger Instance
     {
         get
         {
-
-            if (_instance == null)
-            {
-                _instance = FindFirstObjectByType<VideoManamger>();
-                if (_instance == null)
-                {
-                    GameObject videoManamger = new GameObject("VideoManamger", typeof(VideoManamger));
-                    _instance = videoManamger.GetComponent<VideoManamger>();
-                }
-                return _instance;
-            }
-            else
-            {
-                return _instance;
-            }
+            return _instance;
+            // if (_instance == null)
+            // {
+            //     _instance = FindFirstObjectByType<VideoManamger>();
+            //     if (_instance == null)
+            //     {
+            //         GameObject videoManamger = new GameObject("VideoManamger", typeof(VideoManamger));
+            //         _instance = videoManamger.GetComponent<VideoManamger>();
+            //     }
+            //     return _instance;
+            // }
+            // else
+            // {
+            //     return _instance;
+            // }
 
         }
     }
-
+    #endregion
+    #region Privete variable
     [SerializeField] private string rootVideoFolder = "Videos";
     [SerializeField] private string[] videoFolderName = { "vdo1", "vdo2", "vdo3", "vdo4" };
     [SerializeField] private string[] videoFormat = { "mp4", "mov" };
     private string[][] videoClipsPaths;
-
+    private static bool applicationIsQuitting = false;
     private bool playLoop = true;
-    public bool PlayLoop => playLoop;
-
-
-    public Action OnPlayAll;
-    public Action OnStopAll;
-    public Action OnGetVideoPath;
 
     private VideoSetting videoSetting;
     private string directory = Path.GetDirectoryName(Application.dataPath);
+    #endregion
+    #region  Public variable
+    public Action OnPlayAll;
+    public Action OnStopAll;
+    public Action OnGetVideoPath;
+    public bool PlayLoop => playLoop;
+    #endregion
+
 
     [Header("Test")]
     public string[] pathTest1;
     public string[] pathTest2;
     public string[] pathTest3;
     public string[] pathTest4;
+
+    #region  Unity funcetion
     private void Awake()
     {
         if (_instance != null && _instance != this) Destroy(this.gameObject);
@@ -65,6 +73,7 @@ public class VideoManamger : MonoBehaviour
     void Start()
     {
         LoadSetting();
+        
     }
 
 
@@ -93,6 +102,13 @@ public class VideoManamger : MonoBehaviour
     }
 
 
+    void OnDestroy()
+    {
+        applicationIsQuitting = true;
+    }
+    #endregion
+    #region Load and save setting
+    // โหลดตัวตั่งค่า
     private void LoadSetting()
     {
         var path = Path.Combine(GetVideoSetting(), "VideoSetting.json");
@@ -104,23 +120,42 @@ public class VideoManamger : MonoBehaviour
         }
         else
         {
-            _videoSetting = new VideoSetting();
-            var jsonData = JsonUtility.ToJson(_videoSetting);
+            // _videoSetting = new VideoSetting();
+            // var jsonData = JsonUtility.ToJson(_videoSetting);
 
-            File.WriteAllText(path, jsonData);
+            //      File.WriteAllText(path, jsonData);
+            SaveSetting(_videoSetting, path);
         }
 
         Setting(_videoSetting);
 
     }
-
+    // Save ตั่งค่า
+    private void SaveSetting(VideoSetting _videoSetting, string _path)
+    {
+        JsonUtility.ToJson(_videoSetting);
+        var jsonData = JsonUtility.ToJson(_videoSetting);
+        File.WriteAllText(_path, jsonData);
+    }
+     // สร้างตัวไฟล์ Save
+    [ContextMenu("CreateSave")]
+    private void CreateSave()
+    {
+        SaveSetting(new VideoSetting(), Path.Combine(GetVideoSetting(), "VideoSetting.json"));
+    }
+    // เอาค่า settinh อ่านมาไปใส่นตัวแปร
     private void Setting(VideoSetting _videoSetting)
     {
         videoSetting = _videoSetting;
 
         playLoop = _videoSetting.playLoop;
+        rootVideoFolder = _videoSetting.RootVideoFolder;
+        videoFolderName = _videoSetting.videoFolderName;
+        videoFormat = _videoSetting.videoFormat;
     }
+    #endregion
 
+    #region  Get path
 #if UNITY_EDITOR
     private string GetVideoFloder(string _floderName)
     {
@@ -132,19 +167,23 @@ public class VideoManamger : MonoBehaviour
         return Path.Combine(directory, "Assets");
     }
 
-
-
-
 #else
     private string GetVideoFloder(string _floderName)
     {
         return Path.Combine(directory, _floderName);
     }
 
-    private string GetVideoSetting() {
-return directory;
-    }   
+    private string GetVideoSetting()
+    {
+        return directory;
+    }
 #endif
+
+    #endregion
+
+
+    #region Debug Value
+   // ดูค่าใน videoClipsPaths
     private void ShowTest()
     {
         pathTest1 = videoClipsPaths[0];
@@ -152,35 +191,50 @@ return directory;
         pathTest3 = videoClipsPaths[2];
         pathTest4 = videoClipsPaths[3];
     }
+    #endregion
 
+
+    #region  Load and get path
+    // เอาข้อมูลใน videoClipsPaths ส่งออกไป
     public string[] GetVideoClipPath(int _number, int _l = 1)
     {
-        if (_number >= videoClipsPaths.Length)
+         Debug.Log("TT " + _l);
+        if (videoClipsPaths == null)
         {
-            return null;
+            LoadPath(); 
         }
-        else
-        {
-            if (videoClipsPaths[_number].Length == 0 || videoClipsPaths[_number] == null)
+        if (_number > videoClipsPaths.Length)
             {
-                if (_l == 1)
-                {
-                    LoadPath();
-                    var rt = GetVideoClipPath(_number, 0);
-                    return rt;
-                }
-
                 return null;
-
             }
-            else return videoClipsPaths[_number];
-        }
+            else
+            {
+                if (videoClipsPaths[_number].Length == 0 || videoClipsPaths[_number] == null)
+                {
+                    Debug.Log("LL " + _l);
+                    if (_l > 0)
+                    {
+                        LoadPath();
+                        var rt = GetVideoClipPath(_number, 0);
+                        return rt;
+                    }
+
+                    return null;
+
+                }
+                else
+                {
+                    Debug.Log("BL " + _l);
+                    return videoClipsPaths[_number];
+                }
+            }
     }
 
 
-
+    // โหลดตัว path vdo ในอยู่ในโฟรเดอร์  vdo1,vdo2...
     private void LoadPath()
     {
+        LoadSetting();
         var rootPath = GetVideoFloder(rootVideoFolder);
 
         videoClipsPaths = new string[4][];
@@ -213,6 +267,6 @@ return directory;
 
 
     }
-
+    #endregion
 
 }
