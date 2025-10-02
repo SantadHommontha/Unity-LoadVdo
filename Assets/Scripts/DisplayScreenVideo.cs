@@ -1,4 +1,5 @@
 
+using System;
 using UnityEngine;
 using UnityEngine.Video;
 
@@ -20,17 +21,19 @@ public class DisplayScreenVideo : MonoBehaviour
     [SerializeField] private string[] videoClipPath;
 
     private int currentVideoIndex = 0;
+
     #endregion
 
     #region Unity Function
     private void OnEnable()
     {
-        if (VideoManamger.Instance)
-        {
+       
             VideoManamger.Instance.OnPlayAll += PlayVideo;
             VideoManamger.Instance.OnStopAll += StopVideo;
             VideoManamger.Instance.OnGetVideoPath += LoadVideoClipPath;
-        }
+            VideoManamger.Instance.OnPlayVideoByNumber += PlayScreenVideoByNumber;
+            VideoManamger.Instance.OnStopVideoByNumber += StopScreenVideoByNumber;
+       
 
     }
     private void OnDisable()
@@ -40,9 +43,9 @@ public class DisplayScreenVideo : MonoBehaviour
             VideoManamger.Instance.OnPlayAll -= PlayVideo;
             VideoManamger.Instance.OnStopAll -= StopVideo;
             VideoManamger.Instance.OnGetVideoPath -= LoadVideoClipPath;
+            VideoManamger.Instance.OnPlayVideoByNumber -= PlayScreenVideoByNumber;
+            VideoManamger.Instance.OnStopVideoByNumber -= StopScreenVideoByNumber;
         }
-
-
     }
 
     private void OnDestroy()
@@ -52,23 +55,36 @@ public class DisplayScreenVideo : MonoBehaviour
             VideoManamger.Instance.OnPlayAll -= PlayVideo;
             VideoManamger.Instance.OnStopAll -= StopVideo;
             VideoManamger.Instance.OnGetVideoPath -= LoadVideoClipPath;
+            VideoManamger.Instance.OnPlayVideoByNumber -= PlayScreenVideoByNumber;
+            VideoManamger.Instance.OnStopVideoByNumber -= StopScreenVideoByNumber;
         }
-
     }
 
     private void Start()
     {
-        SetUP();
+        SetUP();   
     }
 
     #endregion
-
+    public void PlayScreenVideoByNumber(int _number)
+    {    
+        if (_number == videoPlayerNumber)
+        {         
+            PlayVideo();
+        }
+    }
+    public void StopScreenVideoByNumber(int _number)
+    {
+        if (_number == videoPlayerNumber)
+        {
+            StopVideo();
+        }
+    }
     private void SetUP()
     {
         if (!videoPlayer) videoPlayer = GetComponent<VideoPlayer>();
         if (!meshRenderer) meshRenderer = GetComponent<MeshRenderer>();
         meshRenderer.material = blackMat;
-        // vdoMat = meshRenderer.material;
         currentVideoIndex = 0;
     }
     // ไปเอา path ของ video ที่เก็บไว้ใน videoManager

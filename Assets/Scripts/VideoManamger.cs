@@ -20,21 +20,22 @@ public class VideoManamger : MonoBehaviour
     {
         get
         {
-            return _instance;
-            // if (_instance == null)
-            // {
-            //     _instance = FindFirstObjectByType<VideoManamger>();
-            //     if (_instance == null)
-            //     {
-            //         GameObject videoManamger = new GameObject("VideoManamger", typeof(VideoManamger));
-            //         _instance = videoManamger.GetComponent<VideoManamger>();
-            //     }
-            //     return _instance;
-            // }
-            // else
-            // {
-            //     return _instance;
-            // }
+            // return _instance;
+            if (applicationIsQuitting) return null;
+            if (_instance == null)
+            {
+                _instance = FindFirstObjectByType<VideoManamger>();
+                if (_instance == null)
+                {
+                    GameObject videoManamger = new GameObject("VideoManamger", typeof(VideoManamger));
+                    _instance = videoManamger.GetComponent<VideoManamger>();
+                }
+                return _instance;
+            }
+            else
+            {
+                return _instance;
+            }
 
         }
     }
@@ -51,9 +52,11 @@ public class VideoManamger : MonoBehaviour
     private string directory = Path.GetDirectoryName(Application.dataPath);
     #endregion
     #region  Public variable
-    public Action OnPlayAll;
-    public Action OnStopAll;
-    public Action OnGetVideoPath;
+    public Action OnPlayAll;  // เรียกให้ตัว DislayScreenVideo ที่ซัพไว้เล่น video
+    public Action OnStopAll;  // เรียกให้ตัว DislayScreenVideo ที่ซัพไว้หยุดเล่น
+    public Action<int> OnPlayVideoByNumber; // เรียกให้ตัว DislayScreenVideo ที่ซัพไว้เล่น ถ้ามีเลขอันดับที่เหม์นกัน
+    public Action<int> OnStopVideoByNumber; // เรียกให้ตัว DislayScreenVideo ที่ซัพไว้หยุดเล่น ถ้ามีเลขอันดับที่เหม์นกัน
+    public Action OnGetVideoPath; // เรียกให้ตัว DislayScreenVideo ที่ซัพไว้มาดึงข้อมูลใน GetVideoClipPath ไป
     public bool PlayLoop => playLoop;
     #endregion
 
@@ -64,6 +67,9 @@ public class VideoManamger : MonoBehaviour
     public string[] pathTest3;
     public string[] pathTest4;
 
+    public bool GG;
+    public int screenNumberTest = 1;
+
     #region  Unity funcetion
     private void Awake()
     {
@@ -73,39 +79,64 @@ public class VideoManamger : MonoBehaviour
     void Start()
     {
         LoadSetting();
-        
+        LoadPath();
+        GetVideoPath();
     }
 
 
     void Update()
     {
-        if (Input.GetKey(KeyCode.Q))
+        TestFunctionByKeyBoard();
+        // GG = applicationIsQuitting;
+        Debug.Log(applicationIsQuitting);
+    }
+
+    private void TestFunctionByKeyBoard()
+    {
+        if (Input.GetKeyDown(KeyCode.Q))
         {
             LoadPath();
         }
-        if (Input.GetKey(KeyCode.P))
+        if (Input.GetKeyDown(KeyCode.P))
         {
             OnPlayAll?.Invoke();
         }
-        if (Input.GetKey(KeyCode.S))
+        if (Input.GetKeyDown(KeyCode.S))
         {
             OnStopAll?.Invoke();
         }
-        if (Input.GetKey(KeyCode.G))
+        if (Input.GetKeyDown(KeyCode.G))
         {
             OnGetVideoPath?.Invoke();
         }
-        if (Input.GetKey(KeyCode.L))
+        if (Input.GetKeyDown(KeyCode.L))
         {
             LoadSetting();
         }
+        if (Input.GetKeyDown(KeyCode.Alpha1))
+        {
+            OnPlayVideoByNumber?.Invoke(screenNumberTest);
+        }
+        if (Input.GetKeyDown(KeyCode.Alpha2))
+        {
+            OnStopVideoByNumber?.Invoke(screenNumberTest);
+        }
     }
-
-
     void OnDestroy()
     {
         applicationIsQuitting = true;
+        if (_instance = this)
+            _instance = null;
     }
+    #endregion
+
+    #region Action
+    public void PlayAll() => OnPlayAll?.Invoke();
+    public void StopAll() => OnStopAll?.Invoke();
+    public void PlayVideoBymber(int _number) => OnPlayVideoByNumber?.Invoke(_number);
+    public void StopVideoNumber(int _number) => OnStopVideoByNumber?.Invoke(_number);
+    public void GetVideoPath() => OnGetVideoPath?.Invoke();
+
     #endregion
     #region Load and save setting
     // โหลดตัวตั่งค่า
